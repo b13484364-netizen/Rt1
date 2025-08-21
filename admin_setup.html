@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعداد بيانات الطلاب</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* إضافة بعض التنسيقات لهذه الصفحة فقط */
+        #admin-setup {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .student-entry {
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .student-entry label, .student-entry input, .student-entry select, .student-entry button {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .student-entry input[type="text"], .student-entry input[type="password"], .student-entry select {
+            width: calc(100% - 22px);
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .student-entry button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .student-entry button:hover {
+            background-color: #0056b3;
+        }
+        #saved-students-list {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        #saved-students-list div {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="admin-setup">
+        <h1>إعداد بيانات الطلاب</h1>
+        <div id="new-student-form">
+            <div class="student-entry">
+                <h2>إضافة طالب جديد</h2>
+                <label for="studentNameInput">اسم الطالب:</label>
+                <input type="text" id="studentNameInput" placeholder="مثال: أحمد محمد">
+
+                <label for="imageSelect">اختر معرف الشكل الهندسي للطالب:</label>
+                <select id="imageSelect">
+                    <!-- سيتم توليد هذه الخيارات ديناميكياً -->
+                </select>
+
+                <label for="passwordInput">كلمة المرور للطالب:</label>
+                <input type="password" id="passwordInput">
+
+                <label for="studentPageInput">مسار صفحة الطالب:</label>
+                <input type="text" id="studentPageInput" placeholder="مثال: pages/student_page_1.html">
+
+                <button id="addStudentBtn">إضافة الطالب وتوليد المفتاح</button>
+                <p id="statusMessage" style="color: green;"></p>
+            </div>
+        </div>
+
+        <div id="saved-students-list">
+            <h2>الطلاب المسجلون حالياً:</h2>
+            <div id="studentListContainer">
+                <!-- سيتم عرض الطلاب هنا -->
+                <p>لا يوجد طلاب مسجلين بعد.</p>
+            </div>
+            <button id="clearAllStudents" style="background-color: #dc3545;">مسح جميع الطلاب</button>
+        </div>
+    </div>
+
+    <script src="utility.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const imageSelect = document.getElementById('imageSelect');
+            const passwordInput = document.getElementById('passwordInput');
+            const studentNameInput = document.getElementById('studentNameInput');
+            const studentPageInput = document.getElementById('studentPageInput');
+            const addStudentBtn = document.getElementById('addStudentBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            const studentListContainer = document.getElementById('studentListContainer');
+            const clearAllStudentsBtn = document.getElementById('clearAllStudents');
+
+            // وظيفة لعرض الطلاب المسجلين
+            function renderStudents() {
+                const allStudents = getAllStudentData();
+                studentListContainer.innerHTML = '';
+                const studentKeys = Object.keys(allStudents);
+
+                if (studentKeys.length === 0) {
+                    studentListContainer.innerHTML = '<p>لا يوجد طلاب مسجلين بعد.</p>';
+                } else {
+                    studentKeys.forEach(key => {
+                        const studentInfo = allStudents[key];
+                        const div = document.createElement('div');
+                        div.innerHTML = `
+                            <strong>الاسم:</strong> ${studentInfo.name || 'غير محدد'}<br>
+                            <strong>معرف الشكل (ID):</strong> ${studentInfo.image_id || 'غير محدد'}<br>
+                            <strong>مسار الصفحة:</strong> ${studentInfo.page || 'غير محدد'}<br>
+                            <strong>المفتاح (Hash):</strong> <small>${key}</small>
+                        `;
+                        studentListContainer.appendChild(div);
+                    });
+                }
+            }
+
+            // إضافة خيارات الأشكال تلقائيًا
+            const totalShapes = 20; // يجب أن يتطابق مع العدد في index.html
+            for (let i = 1; i <= totalShapes; i++) {
+                const imgId = `img${String(i).padStart(3, '0')}`;
+                const option = document.createElement('option');
+                option.value = imgId;
+                option.textContent = `معرف الشكل ${i} (${imgId})`;
+                imageSelect.appendChild(option);
+            }
+
+            addStudentBtn.addEventListener('click', async () => {
+                const imageId = imageSelect.value;
+                const password = passwordInput.value;
+                const studentName = studentNameInput.value;
+                const studentPage = studentPageInput.value;
+
+                if (!imageId || !password || !studentName || !studentPage) {
+                    statusMessage.textContent = 'الرجاء ملء جميع الحقول.';
+                    statusMessage.style.color = 'red';
+                    return;
+                }
+
+                const studentKey = await generateHash(imageId, password);
+                
+                saveStudentData(studentKey, {
+                    name: studentName,
+                    image_id: imageId,
+                    page: studentPage
+                });
+
+                statusMessage.textContent = `تم إضافة الطالب ${studentName} بنجاح.`;
+                statusMessage.style.color = 'green';
+                
+                studentNameInput.value = '';
+                passwordInput.value = '';
+                studentPageInput.value = '';
+
+                renderStudents();
+            });
+
+            clearAllStudentsBtn.addEventListener('click', () => {
+                if (confirm('هل أنت متأكد من مسح جميع بيانات الطلاب؟ هذا لا يمكن التراجع عنه!')) {
+                    localStorage.removeItem('studentLogins');
+                    statusMessage.textContent = 'تم مسح جميع بيانات الطلاب.';
+                    statusMessage.style.color = 'orange';
+                    renderStudents();
+                }
+            });
+
+            renderStudents();
+        });
+    </script>
+</body>
+</html>

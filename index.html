@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل دخول الطلاب</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* تنسيقات خاصة بصفحة الدخول */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .login-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+            position: relative; /* لإحتواء زر الإدارة */
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 25px;
+        }
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+        .image-card {
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            /* لضمان احتواء الكانفاس بشكل صحيح */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-card.selected {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
+            background-color: #e7f2ff;
+        }
+        .image-card canvas { /* تنسيق الكانفاس */
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            display: block;
+        }
+        .image-card span {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.8em;
+            color: #555;
+        }
+        .password-input-group {
+            margin-bottom: 25px;
+        }
+        .password-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+            font-weight: bold;
+        }
+        .password-input-group input[type="password"] {
+            width: calc(100% - 40px);
+            padding: 12px 18px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1.1em;
+        }
+        button {
+            padding: 12px 25px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #message {
+            color: red;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .student-page-content {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fefefe;
+            text-align: right;
+            width: 100%;
+            max-width: 700px;
+            display: none; /* إخفائها افتراضياً */
+        }
+
+        /* زر الدخول لصفحة الإدارة */
+        .admin-link {
+            position: absolute;
+            top: 10px;
+            left: 10px; /* أو right: 10px; إذا كنت تفضل في الجهة اليسرى */
+            font-size: 0.8em;
+        }
+        .admin-link a {
+            color: #6c757d;
+            text-decoration: none;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            transition: background-color 0.2s;
+        }
+        .admin-link a:hover {
+            background-color: #e2e6ea;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="login-section">
+        <h1>مرحبا بك! الرجاء اختيار صورتك وإدخال كلمة المرور</h1>
+        
+        <div class="image-gallery" id="image-gallery">
+            <!-- سيتم تحميل الأشكال الهندسية هنا ديناميكياً -->
+        </div>
+        
+        <div class="password-input-group">
+            <label for="password">كلمة المرور:</label>
+            <input type="password" id="password" placeholder="أدخل كلمة المرور الخاصة بك">
+        </div>
+        
+        <button id="loginButton">تسجيل الدخول</button>
+        
+        <p id="message"></p>
+
+        <!-- زر الدخول لصفحة الإدارة -->
+        <div class="admin-link">
+            <a href="admin_setup.html">الدخول لصفحة الإعدادات</a>
+        </div>
+    </div>
+
+    <!-- هذا الجزء سيظهر بعد تسجيل الدخول بنجاح -->
+    <div class="student-page-content" id="student-content">
+        <h2 id="welcome-message"></h2>
+        <div id="specific-student-info">
+            <!-- محتوى الطالب الخاص سيتم تحميله هنا -->
+            <p>هذه هي صفحتك الخاصة. يمكنك إضافة أي محتوى هنا.</p>
+            <p>اسمك: <span id="student-name-display"></span></p>
+            <p>صورة هويتك: <span id="student-image-id-display"></span></p>
+        </div>
+        <button id="logoutButton" style="background-color: #6c757d;">تسجيل الخروج</button>
+    </div>
+
+    <script src="utility.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const imageGallery = document.getElementById('image-gallery');
+            const passwordInput = document.getElementById('password');
+            const loginButton = document.getElementById('loginButton');
+            const messageDisplay = document.getElementById('message');
+            const loginSection = document.getElementById('login-section');
+            const studentContentSection = document.getElementById('student-content');
+            const welcomeMessage = document.getElementById('welcome-message');
+            const studentNameDisplay = document.getElementById('student-name-display');
+            const studentImageIdDisplay = document.getElementById('student-image-id-display');
+            const logoutButton = document.getElementById('logoutButton');
+
+            let selectedImageId = null;
+
+            const totalImages = 20;
+            const canvasSize = 100; // حجم الكانفاس (العرض والارتفاع)
+
+            // دالة لتوليد لون عشوائي
+            function getRandomColor() {
+                const letters = '0123456789ABCDEF';
+                let color = '#';
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+
+            // دالة لرسم شكل هندسي عشوائي على الكانفاس
+            function drawRandomShape(ctx, size, seed) {
+                const centerX = size / 2;
+                const centerY = size / 2;
+
+                // استخدام الـ seed لضمان تكرار نفس الشكل واللون لنفس الـ ID
+                // ببساطة، سنقوم بإنشاء "مولد أرقام شبه عشوائية" خاص بنا
+                // https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
+                function mulberry32(a) {
+                    return function() {
+                        let t = a += 0x6D2B79F5;
+                        t = Math.imul(t ^ t >>> 15, t | 1);
+                        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+                    }
+                }
+                const random = mulberry32(seed); // استخدام الـ seed كـ "بذرة"
+
+                ctx.clearRect(0, 0, size, size); // مسح الكانفاس
+                ctx.fillStyle = "#eee"; // لون خلفية خفيف
+                ctx.fillRect(0, 0, size, size);
+
+                const shapeType = Math.floor(random() * 3); // 0: دائرة, 1: مربع, 2: مثلث
+                const shapeColor = getRandomColor(); // يمكن استخدام random() هنا أيضاً
+                const shapeSize = size * (0.3 + random() * 0.3); // حجم عشوائي بين 30% و 60% من حجم الكانفاس
+
+                ctx.fillStyle = shapeColor;
+                ctx.beginPath();
+
+                if (shapeType === 0) { // دائرة
+                    ctx.arc(centerX, centerY, shapeSize / 2, 0, Math.PI * 2);
+                } else if (shapeType === 1) { // مربع
+                    ctx.rect(centerX - shapeSize / 2, centerY - shapeSize / 2, shapeSize, shapeSize);
+                } else { // مثلث
+                    ctx.moveTo(centerX, centerY - shapeSize / 2);
+                    ctx.lineTo(centerX + shapeSize / 2, centerY + shapeSize / 2);
+                    ctx.lineTo(centerX - shapeSize / 2, centerY + shapeSize / 2);
+                    ctx.closePath();
+                }
+                ctx.fill();
+
+                // إضافة نص ID على الصورة
+                ctx.fillStyle = 'rgba(0,0,0,0.5)'; // لون نص رمادي شبه شفاف
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(seed.toString(), centerX, centerY + shapeSize / 2 + 10); // ID الطالب
+            }
+
+            // 1. توليد الأشكال الهندسية وعرضها في المعرض
+            for (let i = 1; i <= totalImages; i++) {
+                const imgId = `img${String(i).padStart(3, '0')}`; // مثال: img001, img002
+                const seed = i; // استخدام رقم الطالب كـ "بذرة" لضمان شكل ولون ثابتين لنفس الطالب
+
+                const imgCard = document.createElement('div');
+                imgCard.classList.add('image-card');
+                imgCard.dataset.imageId = imgId; // حفظ معرف الصورة
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = canvasSize;
+                canvas.height = canvasSize;
+                const ctx = canvas.getContext('2d');
+                drawRandomShape(ctx, canvasSize, seed); // رسم الشكل على الكانفاس
+
+                const imgLabel = document.createElement('span');
+                imgLabel.textContent = `${imgId}`; // عرض معرف الصورة
+
+                imgCard.appendChild(canvas); // إضافة الكانفاس بدلاً من الـ <img>
+                imgCard.appendChild(imgLabel);
+                imageGallery.appendChild(imgCard);
+
+                imgCard.addEventListener('click', () => {
+                    // إزالة التحديد من جميع الصور أولاً
+                    document.querySelectorAll('.image-card').forEach(card => {
+                        card.classList.remove('selected');
+                    });
+                    // تحديد الصورة المحددة
+                    imgCard.classList.add('selected');
+                    selectedImageId = imgId;
+                });
+            }
+
+            // 2. معالجة زر تسجيل الدخول (لا تغيير هنا)
+            loginButton.addEventListener('click', async () => {
+                const password = passwordInput.value;
+
+                if (!selectedImageId) {
+                    messageDisplay.textContent = 'الرجاء اختيار صورتك.';
+                    return;
+                }
+                if (!password) {
+                    messageDisplay.textContent = 'الرجاء إدخال كلمة المرور.';
+                    return;
+                }
+
+                const currentAttemptHash = await generateHash(selectedImageId, password);
+                const allStoredStudents = getAllStudentData();
+                const matchedStudentInfo = allStoredStudents[currentAttemptHash];
+
+                if (matchedStudentInfo) {
+                    messageDisplay.textContent = `أهلاً بك يا ${matchedStudentInfo.name}!`;
+                    messageDisplay.style.color = 'green';
+                    
+                    loginSection.style.display = 'none';
+                    studentContentSection.style.display = 'block';
+
+                    welcomeMessage.textContent = `مرحبا بك يا ${matchedStudentInfo.name}!`;
+                    studentNameDisplay.textContent = matchedStudentInfo.name;
+                    studentImageIdDisplay.textContent = matchedStudentInfo.image_id;
+                    
+                } else {
+                    messageDisplay.textContent = 'معرف الصورة أو كلمة المرور خاطئة.';
+                    messageDisplay.style.color = 'red';
+                }
+            });
+
+            // زر تسجيل الخروج (لا تغيير هنا)
+            logoutButton.addEventListener('click', () => {
+                studentContentSection.style.display = 'none';
+                loginSection.style.display = 'block';
+                passwordInput.value = '';
+                document.querySelectorAll('.image-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                selectedImageId = null;
+                messageDisplay.textContent = '';
+            });
+        });
+    </script>
+</body>
+</html>

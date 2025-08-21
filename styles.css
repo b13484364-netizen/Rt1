@@ -1,0 +1,11 @@
+/* styles.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    direction: rtl; /* للغة العربية */
+    text-align: right;
+}
+
+/* يمكنك إضافة المزيد من التنسيقات العامة هنا */
